@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JANGAME — Prashant Jangam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060606;
+  --surface: #0d0d0d;
+  --surface2: #111;
+  --text: #e8e4df;
+  --muted: #4a4a4a;
+  --muted2: #2a2a2a;
+  --accent: #c8ff00;
+  --accent2: #ff4d00;
+  --border: #1a1a1a;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 300;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CURSOR ── */
+#cursor {
+  width: 10px; height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease, background 0.3s ease;
+  mix-blend-mode: difference;
+}
+#cursor.hover { width: 44px; height: 44px; }
+@media (max-width: 768px) { #cursor { display: none; } body { cursor: auto; } }
+
+/* ── GATE ── */
+#gate {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.9s ease, visibility 0.9s ease;
+}
+#gate.out { opacity: 0; visibility: hidden; pointer-events: none; }
+.gate-logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(3.5rem, 14vw, 10rem);
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 0.15em;
+}
+.gate-logo span { color: var(--accent); }
+.gate-sub {
+  font-size: clamp(0.6rem, 1.5vw, 0.78rem);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4rem;
+}
+#enter-btn {
+  font-family: var(--font-display);
+  font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: var(--text);
+  padding: 1.1rem 3rem;
+  cursor: none;
+  position: relative; overflow: hidden;
+  transition: border-color 0.3s, color 0.3s;
+}
+#enter-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  z-index: -1;
+}
+#enter-btn:hover { border-color: var(--accent); color: #000; }
+#enter-btn:hover::before { transform: scaleX(1); }
+.gate-footer {
+  position: absolute; bottom: 2rem;
+  font-size: 0.6rem; letter-spacing: 0.25em;
+  color: #1e1e1e; text-transform: uppercase;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 3rem;
+  mix-blend-mode: difference;
+}
+.nav-logo {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 1rem; letter-spacing: -0.02em;
+  color: var(--text); text-decoration: none;
+}
+.nav-logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 2.5rem; }
+.nav-links a {
+  font-size: 0.7rem; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--muted);
+  text-decoration: none; transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+@media (max-width: 768px) {
+  nav { padding: 1.2rem 1.5rem; }
+  .nav-links { gap: 1.2rem; }
+  .nav-links a { font-size: 0.6rem; letter-spacing: 0.15em; }
+}
+
+/* ── HERO ── */
+#hero {
+  height: 100vh;
+  position: relative; display: flex; align-items: flex-end;
+  padding: 4rem 3rem; overflow: hidden;
+}
+canvas#noise {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0.035; pointer-events: none;
+}
+.hero-mesh {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 65% 55% at 72% 38%, rgba(200,255,0,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 65% at 18% 78%, rgba(255,77,0,0.04) 0%, transparent 55%);
+  pointer-events: none;
+}
+.hero-content { position: relative; z-index: 2; }
+.hero-eyebrow {
+  font-size: 0.68rem; letter-spacing: 0.42em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.hero-eyebrow::before {
+  content: ''; display: block; width: 36px; height: 1px;
+  background: var(--accent);
+}
+.hero-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(3.5rem, 9vw, 8.5rem);
+  line-height: 0.9; letter-spacing: -0.04em;
+  margin-bottom: 2rem;
+}
+.hero-title em { font-style: normal; color: var(--accent); }
+.hero-tagline {
+  font-size: clamp(0.88rem, 1.4vw, 1rem);
+  color: #555; max-width: 400px; line-height: 1.75;
+}
+.scroll-hint {
+  position: absolute; right: 3rem; bottom: 4rem;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.6rem;
+  font-size: 0.6rem; letter-spacing: 0.32em;
+  text-transform: uppercase; color: #2a2a2a;
+}
+.scroll-line {
+  width: 1px; height: 64px;
+  background: linear-gradient(to bottom, #2a2a2a, transparent);
+  animation: scrollPulse 2.2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%,100% { opacity: 0.3; transform: scaleY(1) translateY(0); }
+  50% { opacity: 1; transform: scaleY(0.6) translateY(8px); }
+}
+@media (max-width: 768px) {
+  #hero { padding: 2rem 1.5rem; }
+  .scroll-hint { right: 1.5rem; bottom: 2rem; }
+}
+
+/* ── MARQUEE ── */
+.marquee-wrap {
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem 0;
+  background: var(--surface);
+}
+.marquee-track {
+  display: flex; animation: marquee 28s linear infinite; white-space: nowrap;
+}
+.marquee-item {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(0.72rem, 1.8vw, 0.9rem);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); padding: 0 2.5rem; flex-shrink: 0;
+}
+.marquee-item span { color: var(--accent); margin-right: 2.5rem; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ── SHARED ── */
+section { padding: 7rem 3rem; }
+@media (max-width: 768px) { section { padding: 4rem 1.5rem; } }
+
+.section-label {
+  font-size: 0.62rem; letter-spacing: 0.45em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 3rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.section-label::after {
+  content: ''; height: 1px; background: var(--border);
+  flex: 1; max-width: 70px;
+}
+.section-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(2rem, 5vw, 4rem);
+  letter-spacing: -0.03em; line-height: 1;
+  margin-bottom: 4rem;
+}
+
+/* ── STATS ── */
+#stats { padding-top: 0; padding-bottom: 0; }
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--border);
+}
+.stat-card {
+  background: var(--surface); padding: 3rem 2rem;
+  transition: background 0.3s;
+  border-bottom: 2px solid transparent;
+}
+.stat-card:hover { background: var(--surface2); border-bottom-color: var(--accent); }
+.stat-num {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(2.8rem, 5vw, 4.2rem);
+  letter-spacing: -0.05em; color: var(--accent);
+  line-height: 1; margin-bottom: 0.5rem;
+}
+.stat-label {
+  font-size: 0.68rem; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--muted);
+}
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-card { padding: 2rem 1.5rem; }
+}
+
+/* ── PROJECTS ── */
+#projects { border-top: 1px solid var(--border); }
+.project-list { display: flex; flex-direction: column; }
+.project-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  align-items: center;
+  padding: 2.2rem 0;
+  border-bottom: 1px solid var(--border);
+  position: relative; cursor: none;
+  overflow: hidden; gap: 2rem;
+  transition: border-bottom-color 0.3s;
+}
+.project-row::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--surface);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.55s cubic-bezier(0.16,1,0.3,1); z-index: 0;
+}
+.project-row:hover::before { transform: scaleX(1); }
+.project-row:hover { border-bottom-color: var(--accent); }
+.proj-num {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 0.72rem; color: var(--muted);
+  letter-spacing: 0.12em; position: relative; z-index: 1;
+  transition: color 0.3s;
+}
+.project-row:hover .proj-num { color: var(--accent); }
+.proj-info { position: relative; z-index: 1; }
+.proj-name {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.1rem, 3vw, 2rem);
+  letter-spacing: -0.02em; line-height: 1.1;
+  transition: color 0.3s;
+}
+.proj-meta {
+  display: flex; gap: 1.5rem; align-items: center; margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+.proj-cat {
+  font-size: 0.68rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--muted);
+}
+.proj-year { font-size: 0.65rem; color: #282828; }
+.proj-arrow {
+  position: relative; z-index: 1; font-size: 1.4rem;
+  color: #222; transform: rotate(-45deg);
+  transition: transform 0.3s, color 0.3s;
+}
+.project-row:hover .proj-arrow { transform: rotate(0deg); color: var(--accent); }
+#preview-img {
+  position: fixed; width: 230px; height: 150px;
+  background: var(--surface2); border: 1px solid #1e1e1e;
+  pointer-events: none; z-index: 9000; overflow: hidden;
+  opacity: 0; transition: opacity 0.25s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+#preview-img .pi-inner {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.5rem;
+}
+#preview-img .pi-icon { font-size: 2.2rem; opacity: 0.3; }
+#preview-img .pi-label {
+  font-size: 0.6rem; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--muted);
+}
+@media (max-width: 768px) {
+  .project-row { grid-template-columns: 48px 1fr auto; gap: 1rem; }
+  #preview-img { display: none; }
+}
+
+/* ── EXPERIENCE ── */
+#experience { border-top: 1px solid var(--border); background: var(--surface); }
+.exp-list { display: flex; flex-direction: column; }
+.exp-item {
+  display: grid; grid-template-columns: 220px 1fr;
+  gap: 3rem; padding: 3.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.exp-item:last-child { border-bottom: none; }
+.exp-company {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 1rem; letter-spacing: -0.01em;
+  margin-bottom: 0.4rem;
+}
+.exp-duration {
+  font-size: 0.67rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.exp-location { font-size: 0.7rem; color: #2e2e2e; }
+.exp-role {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.05rem, 2.5vw, 1.5rem);
+  letter-spacing: -0.02em; margin-bottom: 1.2rem;
+  line-height: 1.2;
+}
+.exp-role span { color: var(--accent); }
+.exp-bullets { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.exp-bullets li {
+  font-size: 0.85rem; line-height: 1.72; color: #5e5e5e;
+  padding-left: 1.3rem; position: relative;
+}
+.exp-bullets li::before {
+  content: '—'; position: absolute; left: 0;
+  color: var(--accent); font-size: 0.72rem; top: 0.15em;
+}
+.exp-tags {
+  display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1.4rem;
+}
+.exp-tag {
+  font-size: 0.6rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #333;
+  border: 1px solid #1e1e1e;
+  padding: 0.3rem 0.75rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+.exp-tag:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 768px) {
+  .exp-item { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+/* ── SKILLS ── */
+#skills { border-top: 1px solid var(--border); }
+.skills-matrix {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border);
+}
+.skill-group {
+  background: var(--bg); padding: 2rem 1.8rem;
+  transition: background 0.3s;
+}
+.skill-group:hover { background: var(--surface); }
+.sg-label {
+  font-size: 0.6rem; letter-spacing: 0.38em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 1rem;
+}
+.sg-items { display: flex; flex-direction: column; gap: 0.38rem; }
+.sg-item {
+  font-size: 0.82rem; color: #565656; line-height: 1.6;
+  transition: color 0.2s;
+}
+.sg-item:hover { color: var(--text); }
+@media (max-width: 768px) { .skills-matrix { grid-template-columns: 1fr; } }
+
+/* ── ABOUT ── */
+#about { border-top: 1px solid var(--border); background: var(--surface); }
+.about-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6rem; align-items: start;
+}
+.about-manifesto p {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  letter-spacing: -0.025em; line-height: 1.18; margin-bottom: 0.6em;
+}
+.about-manifesto p em { font-style: normal; color: var(--accent); }
+.about-bio p {
+  font-size: 0.87rem; line-height: 1.85; color: #585858; margin-bottom: 1.2rem;
+}
+.about-langs {
+  margin-top: 2rem; padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+.about-langs h5 {
+  font-size: 0.6rem; letter-spacing: 0.38em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem;
+}
+.lang-list { display: flex; gap: 2.5rem; flex-wrap: wrap; }
+.lang-item { font-size: 0.82rem; color: #565656; }
+.lang-item strong { color: var(--text); font-weight: 400; }
+@media (max-width: 768px) {
+  .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+}
+
+/* ── EDUCATION ── */
+#education { border-top: 1px solid var(--border); }
+.edu-list { display: flex; flex-direction: column; }
+.edu-row {
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: start; gap: 2rem;
+  padding: 2.5rem 0; border-bottom: 1px solid var(--border);
+  transition: border-bottom-color 0.3s;
+}
+.edu-row:last-child { border-bottom: none; }
+.edu-row:hover { border-bottom-color: var(--accent); }
+.edu-degree {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(0.95rem, 2vw, 1.35rem);
+  letter-spacing: -0.01em; margin-bottom: 0.4rem;
+}
+.edu-institution { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+.edu-right { text-align: right; flex-shrink: 0; }
+.edu-year {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 0.78rem; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 0.4rem;
+}
+.edu-grade {
+  display: inline-block; font-size: 0.62rem;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--accent);
+  padding: 0.2rem 0.6rem;
+}
+@media (max-width: 768px) {
+  .edu-row { grid-template-columns: 1fr; }
+  .edu-right { text-align: left; }
+}
+
+/* ── CERTIFICATIONS ── */
+#certifications { border-top: 1px solid var(--border); background: var(--surface); }
+.cert-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border);
+}
+.cert-card {
+  background: var(--bg); padding: 2.2rem;
+  transition: background 0.3s;
+  display: flex; flex-direction: column; gap: 0.7rem;
+}
+.cert-card:hover { background: #090909; }
+.cert-icon { font-size: 1.5rem; opacity: 0.4; }
+.cert-name {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 0.9rem; letter-spacing: -0.01em; line-height: 1.3;
+}
+.cert-issuer {
+  font-size: 0.67rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted);
+}
+.cert-status {
+  display: inline-block; font-size: 0.58rem;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  padding: 0.22rem 0.65rem;
+  border: 1px solid; width: fit-content;
+  margin-top: auto; text-decoration: none;
+}
+.cert-status.verified { border-color: var(--accent); color: var(--accent); }
+.cert-status.pursuing { border-color: #2a2a2a; color: #3a3a3a; }
+.cert-status.planned { border-color: #1e1e1e; color: #2e2e2e; }
+@media (max-width: 768px) { .cert-grid { grid-template-columns: 1fr; } }
+
+/* ── CONTACT ── */
+#contact { border-top: 1px solid var(--border); }
+.contact-top { margin-bottom: 5rem; }
+.contact-cta {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(2.8rem, 7vw, 6.5rem);
+  letter-spacing: -0.04em; line-height: 0.92; margin-bottom: 2.5rem;
+}
+.contact-cta em { font-style: normal; color: var(--accent); }
+.contact-email-link {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(0.9rem, 2.2vw, 1.4rem);
+  color: var(--text); text-decoration: none;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid #1e1e1e;
+  padding-bottom: 3px;
+  transition: color 0.2s, border-color 0.2s;
+  display: inline-block;
+}
+.contact-email-link:hover { color: var(--accent); border-color: var(--accent); }
+.contact-bottom {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;
+  padding-top: 4rem; border-top: 1px solid var(--border);
+}
+.contact-col h4 {
+  font-size: 0.6rem; letter-spacing: 0.38em;
+  text-transform: uppercase; color: #252525; margin-bottom: 1rem;
+}
+.contact-col a, .contact-col p {
+  display: block; font-size: 0.87rem;
+  color: #565656; text-decoration: none; line-height: 1.9;
+  transition: color 0.2s;
+}
+.contact-col a:hover { color: var(--accent); }
+.book-btn {
+  display: inline-block;
+  font-family: var(--font-display); font-size: 0.78rem;
+  font-weight: 700; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  background: var(--accent); color: #000;
+  padding: 1rem 2.2rem; text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+  margin-top: 1.8rem;
+}
+.book-btn:hover { opacity: 0.85; transform: translateY(-2px); }
+.footer-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 3rem; border-top: 1px solid var(--border);
+  flex-wrap: wrap; gap: 1rem; margin-top: 4rem;
+}
+.footer-bottom p { font-size: 0.67rem; color: #242424; letter-spacing: 0.1em; }
+.footer-logo {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 0.95rem; letter-spacing: -0.02em; color: #242424;
+}
+.footer-logo span { color: var(--accent); }
+@media (max-width: 768px) {
+  .contact-bottom { grid-template-columns: 1fr 1fr; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── SCROLL REVEAL ── */
+.reveal {
+  opacity: 0; transform: translateY(36px);
+  transition: opacity 0.85s ease, transform 0.85s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.32s; }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<div id="preview-img">
+  <div class="pi-inner">
+    <div class="pi-icon">⬡</div>
+    <div class="pi-label"></div>
+  </div>
+</div>
+
+<!-- ── GATE ── -->
+<div id="gate">
+  <div class="gate-logo">JANG<span>A</span>ME</div>
+  <div class="gate-sub">Software Engineering &amp; Architecture · Mumbai</div>
+  <button id="enter-btn">Enter Portfolio</button>
+  <div class="gate-footer">Prashant Jangam · jangame.org · 2025</div>
+</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#hero" class="nav-logo">J<span>.</span></a>
+  <div class="nav-links">
+    <a href="#projects">Work</a>
+    <a href="#experience">Experience</a>
+    <a href="#education">Education</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <canvas id="noise"></canvas>
+  <div class="hero-mesh"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Custom Software Engineering Team Lead · Accenture</div>
+    <h1 class="hero-title">
+      PRASHANT<br>
+      <em>JANGAM</em>
+    </h1>
+    <p class="hero-tagline">7+ years architecting enterprise-grade Java systems. Leading cross-functional teams. Delivering at scale for global clients.</p>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ── MARQUEE ── -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="marquee-item">Java Full Stack <span>✦</span></div>
+    <div class="marquee-item">Microservices <span>✦</span></div>
+    <div class="marquee-item">Spring Boot <span>✦</span></div>
+    <div class="marquee-item">Apache Kafka <span>✦</span></div>
+    <div class="marquee-item">AWS Cloud <span>✦</span></div>
+    <div class="marquee-item">Docker · Kubernetes <span>✦</span></div>
+    <div class="marquee-item">Agentic AI <span>✦</span></div>
+    <div class="marquee-item">PostgreSQL · Redis <span>✦</span></div>
+    <div class="marquee-item">Inclusive Leadership <span>✦</span></div>
+    <div class="marquee-item">Event-Driven Architecture <span>✦</span></div>
+    <div class="marquee-item">Java Full Stack <span>✦</span></div>
+    <div class="marquee-item">Microservices <span>✦</span></div>
+    <div class="marquee-item">Spring Boot <span>✦</span></div>
+    <div class="marquee-item">Apache Kafka <span>✦</span></div>
+    <div class="marquee-item">AWS Cloud <span>✦</span></div>
+    <div class="marquee-item">Docker · Kubernetes <span>✦</span></div>
+    <div class="marquee-item">Agentic AI <span>✦</span></div>
+    <div class="marquee-item">PostgreSQL · Redis <span>✦</span></div>
+    <div class="marquee-item">Inclusive Leadership <span>✦</span></div>
+    <div class="marquee-item">Event-Driven Architecture <span>✦</span></div>
+  </div>
+</div>
+
+<!-- ── STATS ── -->
+<section id="stats">
+  <div class="stats-grid">
+    <div class="stat-card reveal">
+      <div class="stat-num">7+</div>
+      <div class="stat-label">Years Engineering</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-1">
+      <div class="stat-num">P3+</div>
+      <div class="stat-label">Expert — Accenture</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-2">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Downtime Deployments</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-3">
+      <div class="stat-num">UK</div>
+      <div class="stat-label">Vodafone — Global Client</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROJECTS ── -->
+<section id="projects">
+  <div class="section-label">Selected Work</div>
+  <h2 class="section-title reveal">Engineering<br>That Scales</h2>
+  <div class="project-list">
+
+    <div class="project-row reveal" data-preview="Vodafone UK" data-icon="📡">
+      <div class="proj-num">01</div>
+      <div class="proj-info">
+        <div class="proj-name">Vodafone UK Digital Platform</div>
+        <div class="proj-meta">
+          <div class="proj-cat">Microservices · Kafka · PostgreSQL · Docker · AWS</div>
+          <div class="proj-year">Mar 2022 – Present</div>
+        </div>
+      </div>
+      <div class="proj-arrow">→</div>
+    </div>
+
+    <div class="project-row reveal reveal-delay-1" data-preview="GTM System" data-icon="🏗️">
+      <div class="proj-num">02</div>
+      <div class="proj-info">
+        <div class="proj-name">Global Tender Management</div>
+        <div class="proj-meta">
+          <div class="proj-cat">Java · Spring Framework · Oracle · RESTful APIs</div>
+          <div class="proj-year">2020 – 2022</div>
+        </div>
+      </div>
+      <div class="proj-arrow">→</div>
+    </div>
+
+    <div class="project-row reveal reveal-delay-2" data-preview="Freight Mgmt" data-icon="🚚">
+      <div class="proj-num">03</div>
+      <div class="proj-info">
+        <div class="proj-name">FMCSP — Freight Management Platform</div>
+        <div class="proj-meta">
+          <div class="proj-cat">Java · Spring MVC · JSF · Primefaces · RESTful APIs</div>
+          <div class="proj-year">2019 – 2022</div>
+        </div>
+      </div>
+      <div class="proj-arrow">→</div>
+    </div>
+
+    <div class="project-row reveal reveal-delay-3" data-preview="HRM Platform" data-icon="👥">
+      <div class="proj-num">04</div>
+      <div class="proj-info">
+        <div class="proj-name">Logntrack HRM Platform</div>
+        <div class="proj-meta">
+          <div class="proj-cat">Java Swing · JSF · Primefaces · MySQL · Spring MVC</div>
+          <div class="proj-year">2017 – 2019</div>
+        </div>
+      </div>
+      <div class="proj-arrow">→</div>
+    </div>
+
+    <div class="project-row reveal" data-preview="Agentic AI" data-icon="🤖">
+      <div class="proj-num">05</div>
+      <div class="proj-info">
+        <div class="proj-name">Agentic AI Architecture Integration</div>
+        <div class="proj-meta">
+          <div class="proj-cat">Microsoft Agentic AI · LLM Integration · Intelligent Automation</div>
+          <div class="proj-year">2024 – Present</div>
+        </div>
+      </div>
+      <div class="proj-arrow">→</div>
+    </div>
+
+    <div class="project-row reveal reveal-delay-1" data-preview="Order Mgmt" data-icon="⚙️">
+      <div class="proj-num">06</div>
+      <div class="proj-info">
+        <div class="proj-name">Middleware Order Management System</div>
+        <div class="proj-meta">
+          <div class="proj-cat">Event-Driven · Apache Kafka · Docker · Kubernetes · Spring Cloud</div>
+          <div class="proj-year">2022 – Present</div>
+        </div>
+      </div>
+      <div class="proj-arrow">→</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── EXPERIENCE ── -->
+<section id="experience">
+  <div class="section-label">Professional Experience</div>
+  <h2 class="section-title reveal">Career<br>Timeline</h2>
+  <div class="exp-list">
+
+    <div class="exp-item reveal">
+      <div class="exp-left">
+        <div class="exp-company">Accenture</div>
+        <div class="exp-duration">Dec 2025 – Present</div>
+        <div class="exp-location">📍 Mumbai, India</div>
+      </div>
+      <div class="exp-right">
+        <div class="exp-role">Custom Software Engineering <span>Team Lead</span></div>
+        <ul class="exp-bullets">
+          <li>Lead and mentor engineers through Inclusive Leadership and Coaching, designing enterprise-grade applications using Java Full Stack, Spring Boot, and Microservices for the Communications &amp; Media Technology sector.</li>
+          <li>Architected scalable microservices for Vodafone UK with lightweight architecture patterns, reducing deployment time significantly through full CI/CD automation.</li>
+          <li>Drive technical decision-making and architectural reviews while championing psychologically safe environments for innovation and continuous learning.</li>
+          <li>Implemented DevOps culture with Docker containerisation and Kubernetes orchestration, achieving high application uptime.</li>
+        </ul>
+        <div class="exp-tags">
+          <div class="exp-tag">Java Full Stack</div>
+          <div class="exp-tag">Spring Boot</div>
+          <div class="exp-tag">Microservices</div>
+          <div class="exp-tag">Kubernetes</div>
+          <div class="exp-tag">CI/CD</div>
+          <div class="exp-tag">Inclusive Leadership</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-item reveal">
+      <div class="exp-left">
+        <div class="exp-company">Accenture</div>
+        <div class="exp-duration">Mar 2022 – Nov 2025</div>
+        <div class="exp-location">📍 Mumbai, India</div>
+      </div>
+      <div class="exp-right">
+        <div class="exp-role">Custom Software Engineering <span>Senior Analyst</span></div>
+        <ul class="exp-bullets">
+          <li>Designed and developed RESTful microservices using Spring Boot and JSF for Vodafone UK's digital partner services platform, handling high-volume daily transactions with exceptional reliability.</li>
+          <li>Engineered middleware order management system leveraging Apache Kafka, significantly reducing order processing time.</li>
+          <li>Implemented API gateway patterns and service discovery with Spring Cloud, improving inter-service communication efficiency.</li>
+          <li>Led Agile sprints as Scrum Master; optimised database queries with Redis caching, substantially improving response time.</li>
+          <li>Coached and mentored junior developers through pair programming and technical workshops on Spring Boot, JSF, and microservices design patterns.</li>
+        </ul>
+        <div class="exp-tags">
+          <div class="exp-tag">Spring Boot</div>
+          <div class="exp-tag">JSF</div>
+          <div class="exp-tag">Apache Kafka</div>
+          <div class="exp-tag">Spring Cloud</div>
+          <div class="exp-tag">Redis</div>
+          <div class="exp-tag">Scrum Master</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-item reveal">
+      <div class="exp-left">
+        <div class="exp-company">Shvintech Inc</div>
+        <div class="exp-duration">Nov 2019 – Mar 2022</div>
+        <div class="exp-location">📍 Mumbai, India</div>
+      </div>
+      <div class="exp-right">
+        <div class="exp-role">Senior Software Engineer <span>(Technology)</span></div>
+        <ul class="exp-bullets">
+          <li>Developed full-stack web applications using Java, Spring MVC, JSF, Primefaces, and RESTful APIs for logistics and freight management domains.</li>
+          <li>Built FMCSP handling complex pricing algorithms and route optimisation for multiple active users.</li>
+          <li>Designed and implemented GTM (Global Tender Management) system, integrating external vendor APIs and drastically reducing manual processing time.</li>
+          <li>Established unit testing practices using JUnit and Mockito, achieving high code coverage across critical modules.</li>
+        </ul>
+        <div class="exp-tags">
+          <div class="exp-tag">Java</div>
+          <div class="exp-tag">Spring MVC</div>
+          <div class="exp-tag">JSF · Primefaces</div>
+          <div class="exp-tag">Oracle</div>
+          <div class="exp-tag">JUnit · Mockito</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-item reveal">
+      <div class="exp-left">
+        <div class="exp-company">Daynil Group Solutions</div>
+        <div class="exp-duration">Sep 2016 – Sep 2019</div>
+        <div class="exp-location">📍 Mumbai, India</div>
+      </div>
+      <div class="exp-right">
+        <div class="exp-role">Senior <span>Software Engineer</span></div>
+        <ul class="exp-bullets">
+          <li>Developed Logntrack — comprehensive employee management and HRM platform with desktop (Java Swing) and web interfaces, serving multiple enterprise clients.</li>
+          <li>Designed database schemas and ORM using Hibernate; implemented RBAC and authentication with Spring Security.</li>
+          <li>Created RESTful web services for third-party integrations with payroll and attendance systems.</li>
+          <li>Code refactoring and optimisation initiatives significantly reduced application load time.</li>
+        </ul>
+        <div class="exp-tags">
+          <div class="exp-tag">Java Swing</div>
+          <div class="exp-tag">Hibernate</div>
+          <div class="exp-tag">Spring Security</div>
+          <div class="exp-tag">MySQL</div>
+          <div class="exp-tag">REST APIs</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── SKILLS ── -->
+<section id="skills">
+  <div class="section-label">Technical Skills</div>
+  <h2 class="section-title reveal">Full-Stack<br>Capability</h2>
+  <div class="skills-matrix">
+
+    <div class="skill-group reveal">
+      <div class="sg-label">Core · P3+ Expert</div>
+      <div class="sg-items">
+        <div class="sg-item">Java Full Stack Development</div>
+        <div class="sg-item">Microservices &amp; Lightweight Architecture</div>
+        <div class="sg-item">Communication Technology</div>
+        <div class="sg-item">Microsoft Agentic AI Architecture</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal reveal-delay-1">
+      <div class="sg-label">Languages</div>
+      <div class="sg-items">
+        <div class="sg-item">Java (Expert)</div>
+        <div class="sg-item">SQL</div>
+        <div class="sg-item">JavaScript</div>
+        <div class="sg-item">Groovy</div>
+        <div class="sg-item">Python (Basic)</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal reveal-delay-2">
+      <div class="sg-label">Frameworks</div>
+      <div class="sg-items">
+        <div class="sg-item">Spring Boot · Spring MVC</div>
+        <div class="sg-item">Spring Security · Batch · Integration</div>
+        <div class="sg-item">Hibernate · JSF · Primefaces</div>
+        <div class="sg-item">REST API · GraphQL · Microservices</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="sg-label">Databases</div>
+      <div class="sg-items">
+        <div class="sg-item">MySQL · PostgreSQL · Oracle</div>
+        <div class="sg-item">MongoDB · Cassandra</div>
+        <div class="sg-item">Redis (Caching)</div>
+        <div class="sg-item">NoSQL</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal reveal-delay-1">
+      <div class="sg-label">Cloud &amp; DevOps</div>
+      <div class="sg-items">
+        <div class="sg-item">AWS — EC2, S3, Lambda</div>
+        <div class="sg-item">Docker · Kubernetes</div>
+        <div class="sg-item">Jenkins · GitHub Actions</div>
+        <div class="sg-item">CI/CD · Maven · Gradle</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal reveal-delay-2">
+      <div class="sg-label">Architecture</div>
+      <div class="sg-items">
+        <div class="sg-item">Event-Driven Architecture</div>
+        <div class="sg-item">Domain-Driven Design (DDD)</div>
+        <div class="sg-item">API Gateway · Service Mesh</div>
+        <div class="sg-item">OpenAPI · Swagger</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="sg-label">Frontend</div>
+      <div class="sg-items">
+        <div class="sg-item">JSP · Servlets · HTML5 · CSS3</div>
+        <div class="sg-item">JavaScript · jQuery</div>
+        <div class="sg-item">React (Exposure)</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal reveal-delay-1">
+      <div class="sg-label">Methodologies</div>
+      <div class="sg-items">
+        <div class="sg-item">Agile · Scrum · Kanban</div>
+        <div class="sg-item">Test-Driven Development (TDD)</div>
+        <div class="sg-item">DevOps · SDLC</div>
+        <div class="sg-item">Pair Programming</div>
+      </div>
+    </div>
+
+    <div class="skill-group reveal reveal-delay-2">
+      <div class="sg-label">AI &amp; Emerging Tech</div>
+      <div class="sg-items">
+        <div class="sg-item">Microsoft Agentic AI</div>
+        <div class="sg-item">LLM Integration</div>
+        <div class="sg-item">Intelligent Automation</div>
+        <div class="sg-item">AI-Powered Solutions</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section id="about">
+  <div class="section-label">About</div>
+  <div class="about-grid">
+    <div class="about-manifesto">
+      <p class="reveal">Engineering at scale.<br><em>Leadership with purpose.</em></p>
+      <p class="reveal reveal-delay-1">Code that ships.<br>Teams that thrive.<br>Systems that last.</p>
+    </div>
+    <div class="about-bio reveal">
+      <p>Custom Software Engineering Team Lead at Accenture, based in Mumbai. Specialized in Java Full Stack Development, Microservices Architecture, and Cloud-Native systems — building enterprise-grade platforms for global clients including Vodafone UK.</p>
+      <p>P3+ Expert in Java Full Stack Development and Microservices Architecture. Microsoft Certified in Agentic AI Architecture. Oracle Certified Java Programmer. Passionate about inclusive leadership, coaching engineering talent, and shipping high-performance systems with zero downtime.</p>
+      <p>Recognized at Accenture for excellence in inclusive leadership and team development. Mentored multiple junior developers through structured coaching programs. Established coding standards improving overall code quality across the team.</p>
+      <div class="about-langs">
+        <h5>Languages</h5>
+        <div class="lang-list">
+          <div class="lang-item"><strong>English</strong> — Professional</div>
+          <div class="lang-item"><strong>Hindi</strong> — Native</div>
+          <div class="lang-item"><strong>Marathi</strong> — Native</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── EDUCATION ── -->
+<section id="education">
+  <div class="section-label">Education</div>
+  <h2 class="section-title reveal">Academic<br>Foundation</h2>
+  <div class="edu-list">
+
+    <div class="edu-row reveal">
+      <div class="edu-left">
+        <div class="edu-degree">Master of Computer Applications (MCA)</div>
+        <div class="edu-institution">Information Technology<br>Mumbai University · Mumbai, India</div>
+      </div>
+      <div class="edu-right">
+        <div class="edu-year">2017 – 2020</div>
+        <div class="edu-grade">Grade: B</div>
+      </div>
+    </div>
+
+    <div class="edu-row reveal reveal-delay-1">
+      <div class="edu-left">
+        <div class="edu-degree">Bachelor of Science — Information Technology</div>
+        <div class="edu-institution">The Kelkar Education Trust's V.G. Vaze College of Arts, Science &amp; Commerce<br>Mumbai, India</div>
+      </div>
+      <div class="edu-right">
+        <div class="edu-year">2014 – 2017</div>
+        <div class="edu-grade">Grade: A</div>
+      </div>
+    </div>
+
+    <div class="edu-row reveal reveal-delay-2">
+      <div class="edu-left">
+        <div class="edu-degree">High School Diploma — Biology / Biological Sciences</div>
+        <div class="edu-institution">S.K. Somaiya Vidyavihar's College of Arts, Science &amp; Commerce<br>Mumbai, India</div>
+      </div>
+      <div class="edu-right">
+        <div class="edu-year">2012 – 2014</div>
+        <div class="edu-grade">Grade: A</div>
+      </div>
+    </div>
+
+    <div class="edu-row reveal reveal-delay-3">
+      <div class="edu-left">
+        <div class="edu-degree">Secondary School Certificate (SSC)</div>
+        <div class="edu-institution">Pragati Vidya Mandir · Mumbai, India</div>
+      </div>
+      <div class="edu-right">
+        <div class="edu-year">2011 – 2012</div>
+        <div class="edu-grade">Grade: A</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CERTIFICATIONS ── -->
+<section id="certifications">
+  <div class="section-label">Certifications &amp; Recognition</div>
+  <h2 class="section-title reveal">Verified<br>Credentials</h2>
+  <div class="cert-grid">
+
+    <div class="cert-card reveal">
+      <div class="cert-icon">🤖</div>
+      <div class="cert-name">Microsoft Agentic AI Architecture</div>
+      <div class="cert-issuer">Microsoft · Credly Verified</div>
+      <a href="https://www.credly.com/badges/daf40984-3d06-4ec1-a90e-a6b0dd05fe2e" target="_blank" rel="noopener" style="text-decoration:none;">
+        <div class="cert-status verified">Verified ↗</div>
+      </a>
+    </div>
+
+    <div class="cert-card reveal reveal-delay-1">
+      <div class="cert-icon">☁️</div>
+      <div class="cert-name">AWS Certified Solutions Architect</div>
+      <div class="cert-issuer">Amazon Web Services</div>
+      <div class="cert-status pursuing">Pursuing</div>
+    </div>
+
+    <div class="cert-card reveal reveal-delay-2">
+      <div class="cert-icon">☕</div>
+      <div class="cert-name">Oracle Certified Java Programmer</div>
+      <div class="cert-issuer">Oracle Corporation</div>
+      <div class="cert-status verified">Certified</div>
+    </div>
+
+    <div class="cert-card reveal">
+      <div class="cert-icon">🌱</div>
+      <div class="cert-name">Spring Professional Certification</div>
+      <div class="cert-issuer">VMware / Broadcom</div>
+      <div class="cert-status planned">Planned</div>
+    </div>
+
+    <div class="cert-card reveal reveal-delay-1">
+      <div class="cert-icon">⭐</div>
+      <div class="cert-name">P3+ Expert — Java Full Stack &amp; Microservices</div>
+      <div class="cert-issuer">Accenture Internal Recognition</div>
+      <div class="cert-status verified">Achieved</div>
+    </div>
+
+    <div class="cert-card reveal reveal-delay-2">
+      <div class="cert-icon">🏆</div>
+      <div class="cert-name">Excellence in Inclusive Leadership</div>
+      <div class="cert-issuer">Accenture · Team Development Award</div>
+      <div class="cert-status verified">Recognized</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section id="contact">
+  <div class="section-label">Let's Connect</div>
+  <div class="contact-top">
+    <h2 class="contact-cta reveal">Got a project<br>in <em>mind?</em></h2>
+    <a href="/cdn-cgi/l/email-protection#27575546544f4649534d464940464a14121367404a464e4b0944484a" class="contact-email-link reveal reveal-delay-1">
+      <span class="__cf_email__" data-cfemail="93e3e1f2e0fbf2fde7f9f2fdf4f2fea0a6a7d3f4fef2faffbdf0fcfe">[email&#160;protected]</span>
+    </a><br>
+    <a href="/cdn-cgi/l/email-protection#ff8f8d9e8c979e918b959e91989e92cccacbbf98929e9693d19c9092" class="book-btn reveal reveal-delay-2">Book a Meeting ↗</a>
+  </div>
+
+  <div class="contact-bottom">
+    <div class="contact-col reveal">
+      <h4>Phone</h4>
+      <a href="tel:+917738472321">+91 7738472321</a>
+    </div>
+    <div class="contact-col reveal reveal-delay-1">
+      <h4>Online</h4>
+      <a href="https://www.linkedin.com/in/prashantjangam354/" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a href="https://www.credly.com/badges/daf40984-3d06-4ec1-a90e-a6b0dd05fe2e" target="_blank" rel="noopener">Credly ↗</a>
+      <a href="https://jangame.org" target="_blank" rel="noopener">jangame.org ↗</a>
+    </div>
+    <div class="contact-col reveal reveal-delay-2">
+      <h4>Location</h4>
+      <p>Mumbai, India</p>
+      <p style="font-size:0.72rem; color:#1e1e1e; margin-top:0.3rem;">Open to global remote collaboration</p>
+    </div>
+    <div class="contact-col reveal reveal-delay-3">
+      <h4>Languages</h4>
+      <p>English — Professional</p>
+      <p>Hindi · Marathi — Native</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2025 Prashant Jangam · All rights reserved</p>
+    <div class="footer-logo">JANG<span>A</span>ME</div>
+    <p>jangame.org</p>
+  </div>
+</section>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ── CURSOR ── */
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+document.querySelectorAll('a, button, .project-row, .cert-card, .skill-group, .edu-row, .stat-card, .exp-tag').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+/* ── GATE ── */
+document.body.style.overflow = 'hidden';
+document.getElementById('enter-btn').addEventListener('click', () => {
+  document.getElementById('gate').classList.add('out');
+  document.body.style.overflow = '';
+});
+
+/* ── CANVAS NOISE ── */
+const canvas = document.getElementById('noise');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+let frame = 0;
+function drawNoise() {
+  frame++;
+  if (frame % 3 === 0) {
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.createImageData(w, h);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = Math.random() * 255;
+      d[i] = v; d[i+1] = v; d[i+2] = v; d[i+3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  requestAnimationFrame(drawNoise);
+}
+drawNoise();
+
+/* ── SCROLL REVEAL ── */
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.07 });
+reveals.forEach(el => observer.observe(el));
+
+/* ── PROJECT PREVIEW ── */
+const preview = document.getElementById('preview-img');
+const previewLabel = preview.querySelector('.pi-label');
+const previewIcon = preview.querySelector('.pi-icon');
+document.querySelectorAll('.project-row').forEach(row => {
+  row.addEventListener('mouseenter', () => {
+    previewLabel.textContent = row.dataset.preview || '';
+    previewIcon.textContent = row.datase
